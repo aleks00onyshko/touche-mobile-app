@@ -1,0 +1,6 @@
+package com.toucheapp.touche_app
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity: FlutterActivity() {
+}

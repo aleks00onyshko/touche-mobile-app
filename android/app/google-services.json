@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "229629274887",
+    "project_id": "bot-administration",
+    "storage_bucket": "bot-administration.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:229629274887:android:8998968957e3c0f072f3a2",
+        "android_client_info": {
+          "package_name": "com.toucheapp.touche_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "229629274887-oqmobhs4nprsak7tev62nige82ar34h9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAoYDdXnUnxH1qXB64vZsqcxstkTSJQDJs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "229629274887-oqmobhs4nprsak7tev62nige82ar34h9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "229629274887-4fqglqifvp4ht01id0cg03d9s17029vm.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.touche.touche-mobile-app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
