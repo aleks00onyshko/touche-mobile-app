@@ -1,5 +1,11 @@
-class Entity<T> {
-  late T id;
+// TODO: rework this to be an interface
+interface class Entity<T> {
+  T id;
 
   Entity(this.id);
+
+  factory Entity.fromJson(Map<String, dynamic> json) =>
+      {'id': json['id']} as Entity<T>;
+
+  toJson() => Map<String, Object?>;
 }

@@ -14,7 +14,7 @@ class TimeSlotCard extends StatelessWidget {
     return Consumer<TimeSlotsModel>(builder: (context, timeSlotsModel, child) {
       final List<Teacher> teachers = timeSlotsModel.teachers;
       final Teacher teacher = teachers
-          .where((teacher) => teacher.id == timeSlot.teacherId)
+          .where((teacher) => teacher.id == timeSlot.teachersIds[0])
           .toList()
           .first;
 

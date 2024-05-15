@@ -1,10 +1,16 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:touche_app/core/DI/root-locator.dart';
 import 'package:touche_app/widgets/time-slots/widgets/time-slots.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  // setting up DI
+  setupLocator(FirebaseFirestore.instance);
+
   runApp(MaterialApp(
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -24,25 +30,13 @@ void main() {
           displaySmall: GoogleFonts.pacifico(),
         ),
       ),
+      debugShowCheckedModeBanner: false,
+      debugShowMaterialGrid: false,
       home: SafeArea(
           child: Scaffold(
               backgroundColor: Colors.grey[900],
               resizeToAvoidBottomInset: false,
-              body: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                        child: Column(children: [
-                      FutureBuilder(
-                          future: Firebase.initializeApp(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.done) {
-                              return const TimeSlots();
-                            }
-
-                            return const Text('Loading');
-                          })
-                    ]))
-                  ])))));
+              body: const Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                Expanded(child: Column(children: [TimeSlots()]))
+              ])))));
 }

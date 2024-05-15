@@ -1,10 +1,22 @@
 import 'package:touche_app/models/entities/entity.dart';
 
-class Location extends Entity<String> {
-  Location({required String id, required String en, required String uk})
-      : super(id) {
-    displayNames = {'en': en, 'uk': uk};
+class Location implements Entity<String> {
+  Location({required this.id, required this.displayNames});
+
+  @override
+  late String id;
+  late Map<String, String> displayNames;
+
+  @override
+  factory Location.fromJson(Map<String, dynamic> json) {
+    return Location(id: json['id'], displayNames: {
+      'en': json['displayNames']['en'],
+      'uk': json['displayNames']['uk'],
+    });
   }
 
-  late Map<String, String> displayNames;
+  @override
+  toJson() {
+    return {'id': id, 'displayNames': displayNames};
+  }
 }

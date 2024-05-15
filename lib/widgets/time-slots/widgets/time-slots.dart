@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:touche_app/core/DI/root-locator.dart';
 import 'package:touche_app/models/entities/location.dart';
 import 'package:touche_app/state/time-slots.model.dart';
 import 'package:touche_app/widgets/shared/widgets/loading.dart';
@@ -13,7 +14,7 @@ class TimeSlots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-        create: (context) => TimeSlotsModel(),
+        create: (context) => locator.get<TimeSlotsModel>(),
         child:
             Consumer<TimeSlotsModel>(builder: (context, timeSlotsModel, child) {
           if (timeSlotsModel.loading) {
@@ -33,7 +34,7 @@ class TimeSlots extends StatelessWidget {
                   selectedDateId: timeSlotsModel.selectedDateId as String,
                   daySelected: (String dateId) =>
                       timeSlotsModel.selectDateId(dateId)),
-              TimeSlotsList(timeSlots: timeSlotsModel.timeSlots)
+              TimeSlotsList(timeSlots: timeSlotsModel.timeSlots),
             ],
           );
         }));
