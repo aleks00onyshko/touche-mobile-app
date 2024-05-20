@@ -6,10 +6,11 @@ import 'package:intl/intl.dart';
 import 'package:touche_app/models/entities/location.dart';
 import 'package:touche_app/models/entities/teacher.dart';
 import 'package:touche_app/models/entities/time-slot.dart';
-import 'package:touche_app/state/time-slots-data-provider.dart';
+import 'package:touche_app/widgets/time-slots/widgets/time-slots/state/time-slots-data-provider.dart';
 
+// TODO: dispose
 class TimeSlotsModel extends ChangeNotifier {
-  final TimeSlotDataProvider dataProvider;
+  final TimeSlotsDataProvider dataProvider;
 
   bool _loading = false;
   List<TimeSlot> _timeSlots = [];

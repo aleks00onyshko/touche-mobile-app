@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:touche_app/models/entities/teacher.dart';
 import 'package:touche_app/models/entities/time-slot.dart';
-import 'package:touche_app/state/time-slots.model.dart';
+import 'package:touche_app/widgets/time-slots/widgets/time-slots/state/time-slots.model.dart';
 
 class TimeSlotCard extends StatelessWidget {
   final TimeSlot timeSlot;
@@ -13,10 +13,7 @@ class TimeSlotCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<TimeSlotsModel>(builder: (context, timeSlotsModel, child) {
       final List<Teacher> teachers = timeSlotsModel.teachers;
-      final Teacher teacher = teachers
-          .where((teacher) => teacher.id == timeSlot.teachersIds[0])
-          .toList()
-          .first;
+      final Teacher teacher = teachers.where((teacher) => teacher.id == timeSlot.teachersIds[0]).toList().first;
 
       return SizedBox(
         height: 110,

@@ -3,13 +3,13 @@ import 'package:touche_app/models/entities/location.dart';
 import 'package:touche_app/models/entities/teacher.dart';
 import 'package:touche_app/models/entities/time-slot.dart';
 
-class TimeSlotDataProvider {
+class TimeSlotsDataProvider {
   final FirebaseFirestore firebaseApp;
 
-  TimeSlotDataProvider({required this.firebaseApp});
+  TimeSlotsDataProvider({required this.firebaseApp});
 
   Stream<List<TimeSlot>> getTimeSlotsCollectionStream$(String selectedDateId, Location selectedLocation) {
-    final CollectionReference<TimeSlot> timeSlotsRef = FirebaseFirestore.instance
+    final CollectionReference<TimeSlot> timeSlotsRef = firebaseApp
         .collection('dateIds/$selectedDateId/${selectedLocation.id}-slots')
         .withConverter<TimeSlot>(
             fromFirestore: (snapshot, _) => TimeSlot.fromJson(snapshot.data()!), toFirestore: (timeSlot, _) => timeSlot.toJson());
@@ -18,7 +18,7 @@ class TimeSlotDataProvider {
   }
 
   Future<List<Location>> getLocations() async {
-    final CollectionReference<Location> locationsRef = FirebaseFirestore.instance.collection('locations').withConverter<Location>(
+    final CollectionReference<Location> locationsRef = firebaseApp.collection('locations').withConverter<Location>(
         fromFirestore: (snapshot, _) => Location.fromJson(snapshot.data()!), toFirestore: (location, _) => location.toJson());
     final QuerySnapshot<Location> querySnapshot = await locationsRef.get();
 
@@ -26,7 +26,7 @@ class TimeSlotDataProvider {
   }
 
   Future<List<Teacher>> getTeachers() async {
-    final CollectionReference<Teacher> teachersRef = FirebaseFirestore.instance.collection('teachers').withConverter<Teacher>(
+    final CollectionReference<Teacher> teachersRef = firebaseApp.collection('teachers').withConverter<Teacher>(
         fromFirestore: (snapshot, _) => Teacher.fromJson(snapshot.data()!), toFirestore: (teacher, _) => teacher.toJson());
     final QuerySnapshot<Teacher> querySnapshot = await teachersRef.get();
 

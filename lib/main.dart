@@ -3,7 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:touche_app/core/DI/root-locator.dart';
-import 'package:touche_app/widgets/time-slots/widgets/time-slots.dart';
+import 'package:touche_app/widgets/time-slots/widgets/time-slots/widgets/time-slots.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

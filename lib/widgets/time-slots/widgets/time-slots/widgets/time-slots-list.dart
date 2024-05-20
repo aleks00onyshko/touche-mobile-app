@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:touche_app/models/entities/time-slot.dart';
-import 'package:touche_app/widgets/time-slots/widgets/time-slot.dart';
+import 'package:touche_app/widgets/time-slots/widgets/time-slots/widgets/time-slot.dart';
 
 class TimeSlotsList extends StatelessWidget {
   final List<TimeSlot> timeSlots;
+  final Function(BuildContext, TimeSlot) onCardTapped;
 
-  const TimeSlotsList({super.key, required this.timeSlots});
+  const TimeSlotsList({super.key, required this.timeSlots, required this.onCardTapped});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +24,11 @@ class TimeSlotsList extends StatelessWidget {
       child: ListView.builder(
         itemCount: timeSlots.length,
         itemBuilder: (context, index) {
-          return TimeSlotCard(timeSlot: timeSlots[index]);
+          final timeSlot = timeSlots[index];
+          return GestureDetector(
+            onTap: () => onCardTapped(context, timeSlot),
+            child: TimeSlotCard(timeSlot: timeSlot),
+          );
         },
       ),
     );
