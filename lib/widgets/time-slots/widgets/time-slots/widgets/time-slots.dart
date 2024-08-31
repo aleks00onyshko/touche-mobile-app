@@ -30,30 +30,47 @@ class TimeSlots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-        create: (context) => locator.get<TimeSlotsModel>(),
-        child: Consumer<TimeSlotsModel>(builder: (context, timeSlotsModel, child) {
-          if (timeSlotsModel.loading) {
-            return const Center(child: Loading());
-          }
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: Colors.grey[900],
+        resizeToAvoidBottomInset: false,
+        body: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: Column(
+                children: [
+                  ChangeNotifierProvider(
+                      create: (context) => locator.get<TimeSlotsModel>(),
+                      child: Consumer<TimeSlotsModel>(builder: (context, timeSlotsModel, child) {
+                        if (timeSlotsModel.loading) {
+                          return const Center(child: Loading());
+                        }
 
-          return Column(
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: LocationSelect(
-                    locations: timeSlotsModel.locations,
-                    onLocationSelected: (Location location) => timeSlotsModel.selectLocation(location)),
+                        return Column(
+                          children: [
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: LocationSelect(
+                                  locations: timeSlotsModel.locations,
+                                  onLocationSelected: (Location location) => timeSlotsModel.selectLocation(location)),
+                            ),
+                            TimeSelect(
+                                selectedDateId: timeSlotsModel.selectedDateId as String,
+                                daySelected: (String dateId) => timeSlotsModel.selectDateId(dateId)),
+                            TimeSlotsList(
+                              timeSlots: timeSlotsModel.timeSlots,
+                              onCardTapped: _showCustomModalBottomSheet,
+                            ),
+                          ],
+                        );
+                      })),
+                ],
               ),
-              TimeSelect(
-                  selectedDateId: timeSlotsModel.selectedDateId as String,
-                  daySelected: (String dateId) => timeSlotsModel.selectDateId(dateId)),
-              TimeSlotsList(
-                timeSlots: timeSlotsModel.timeSlots,
-                onCardTapped: _showCustomModalBottomSheet,
-              ),
-            ],
-          );
-        }));
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -9,6 +9,7 @@ class TimeSlotCard extends StatelessWidget {
 
   const TimeSlotCard({super.key, required this.timeSlot});
 
+  // TODO: refactor, so it will just only accept teachers;
   @override
   Widget build(BuildContext context) {
     return Consumer<TimeSlotsModel>(builder: (context, timeSlotsModel, child) {

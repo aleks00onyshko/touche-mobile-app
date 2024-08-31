@@ -3,15 +3,16 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:touche_app/core/DI/root-locator.dart';
-import 'package:touche_app/widgets/time-slots/widgets/time-slots/widgets/time-slots.dart';
+import 'package:touche_app/routing/router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+
   // setting up DI
   setupLocator(FirebaseFirestore.instance);
 
-  runApp(MaterialApp(
+  runApp(MaterialApp.router(
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           brightness: Brightness.dark,
@@ -32,11 +33,12 @@ void main() async {
       ),
       debugShowCheckedModeBanner: false,
       debugShowMaterialGrid: false,
-      home: SafeArea(
-          child: Scaffold(
-              backgroundColor: Colors.grey[900],
-              resizeToAvoidBottomInset: false,
-              body: const Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                Expanded(child: Column(children: [TimeSlots()]))
-              ])))));
+      routerConfig: touche_router));
+  // home: SafeArea(
+  //     child: Scaffold(
+  //         backgroundColor: Colors.grey[900],
+  //         resizeToAvoidBottomInset: false,
+  //         body: const Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+  //           Expanded(child: Column(children: [TimeSlots()]))
+  //         ])))));
 }

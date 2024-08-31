@@ -2,16 +2,16 @@ import 'package:touche_app/models/entities/entity.dart';
 import 'package:tuple/tuple.dart';
 
 class TimeSlot implements Entity<String> {
-  TimeSlot({
-    required this.id,
-    required this.duration,
-    required this.teachersIds,
-    required this.dateId,
-    required this.locationId,
-    required this.startTime,
-    required this.booked,
-    this.selectedTeacherId,
-  });
+  TimeSlot(
+      {required this.id,
+      required this.duration,
+      required this.teachersIds,
+      required this.dateId,
+      required this.locationId,
+      required this.startTime,
+      required this.booked,
+      this.selectedTeacherId,
+      this.attendeeId});
 
   @override
   late String id;
@@ -21,6 +21,7 @@ class TimeSlot implements Entity<String> {
   late String dateId;
   late String locationId;
   late String? selectedTeacherId;
+  late String? attendeeId;
   late bool booked;
 
   @override
