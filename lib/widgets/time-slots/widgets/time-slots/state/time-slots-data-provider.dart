@@ -8,13 +8,18 @@ class TimeSlotsDataProvider {
 
   TimeSlotsDataProvider({required this.firebaseApp});
 
-  Stream<List<TimeSlot>> getTimeSlotsCollectionStream$(String selectedDateId, Location selectedLocation) {
+  Stream<List<TimeSlot>> getTimeSlotsCollectionStream$(String selectedDateId, Location selectedLocation, String loggedInUserID) {
     final CollectionReference<TimeSlot> timeSlotsRef = firebaseApp
         .collection('dateIds/$selectedDateId/${selectedLocation.id}-slots')
         .withConverter<TimeSlot>(
             fromFirestore: (snapshot, _) => TimeSlot.fromJson(snapshot.data()!), toFirestore: (timeSlot, _) => timeSlot.toJson());
 
-    return timeSlotsRef.snapshots().map((snapshot) => snapshot.docs.map((docSnapshot) => docSnapshot.data()).toList());
+    final Query<TimeSlot> query = timeSlotsRef.where(
+      'attendeeId',
+      whereIn: ['', loggedInUserID],
+    );
+
+    return query.snapshots().map((snapshot) => snapshot.docs.map((docSnapshot) => docSnapshot.data()).toList());
   }
 
   Future<List<Location>> getLocations() async {

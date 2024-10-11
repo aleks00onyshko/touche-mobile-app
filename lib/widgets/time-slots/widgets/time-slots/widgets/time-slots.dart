@@ -30,11 +30,11 @@ class TimeSlots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: Colors.grey[900],
-        resizeToAvoidBottomInset: false,
-        body: Row(
+    return Scaffold(
+      backgroundColor: Colors.grey[900],
+      resizeToAvoidBottomInset: false,
+      body: SafeArea(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
@@ -43,7 +43,7 @@ class TimeSlots extends StatelessWidget {
                   ChangeNotifierProvider(
                       create: (context) => locator.get<TimeSlotsModel>(),
                       child: Consumer<TimeSlotsModel>(builder: (context, timeSlotsModel, child) {
-                        if (timeSlotsModel.loading) {
+                        if (timeSlotsModel.state['loading']) {
                           return const Center(child: Loading());
                         }
 
@@ -52,14 +52,14 @@ class TimeSlots extends StatelessWidget {
                             Align(
                               alignment: Alignment.centerLeft,
                               child: LocationSelect(
-                                  locations: timeSlotsModel.locations,
+                                  locations: timeSlotsModel.state['locations'],
                                   onLocationSelected: (Location location) => timeSlotsModel.selectLocation(location)),
                             ),
                             TimeSelect(
-                                selectedDateId: timeSlotsModel.selectedDateId as String,
+                                selectedDateId: timeSlotsModel.state['selectedDateId'] as String,
                                 daySelected: (String dateId) => timeSlotsModel.selectDateId(dateId)),
                             TimeSlotsList(
-                              timeSlots: timeSlotsModel.timeSlots,
+                              timeSlots: timeSlotsModel.state['timeSlots'],
                               onCardTapped: _showCustomModalBottomSheet,
                             ),
                           ],

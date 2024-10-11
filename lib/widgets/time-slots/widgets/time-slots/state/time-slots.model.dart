@@ -1,74 +1,55 @@
 import 'dart:async';
-import 'dart:collection';
 
-import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
+import 'package:touche_app/core/state-change-notifier/state-change-notifier.dart';
 import 'package:touche_app/models/entities/location.dart';
-import 'package:touche_app/models/entities/teacher.dart';
 import 'package:touche_app/models/entities/time-slot.dart';
+import 'package:touche_app/widgets/authentication/widgets/state/authentication.model.dart';
+import 'package:touche_app/widgets/time-slots/widgets/time-slots/state/state.dart';
 import 'package:touche_app/widgets/time-slots/widgets/time-slots/state/time-slots-data-provider.dart';
 
-// TODO: dispose
-class TimeSlotsModel extends ChangeNotifier {
+class TimeSlotsModel extends StateChangeNotifier<TimeSlotsState> {
   final TimeSlotsDataProvider dataProvider;
+  final AuthenticationModel authenticationModel;
 
-  bool _loading = false;
-  List<TimeSlot> _timeSlots = [];
-  List<Location> _locations = [];
-  List<Teacher> _teachers = [];
-  String? _selectedDateId;
-  Location? _selectedLocation;
-  Exception? _error;
   StreamSubscription<List<TimeSlot>>? _activeSubscription;
 
-  bool get loading => _loading;
-
-  UnmodifiableListView<TimeSlot> get timeSlots => UnmodifiableListView(_timeSlots);
-
-  UnmodifiableListView<Teacher> get teachers => UnmodifiableListView(_teachers);
-
-  String? get selectedDateId => _selectedDateId;
-
-  UnmodifiableListView<Location> get locations => UnmodifiableListView(_locations);
-
-  Location? get selectedLocation => _selectedLocation;
-
-  Exception? get error => _error;
-
-  TimeSlotsModel({required this.dataProvider}) {
+  TimeSlotsModel(super.initialState, {required this.dataProvider, required this.authenticationModel}) {
     _initialize();
   }
 
+  @override
+  void dispose() {
+    _cancelActiveTimeSlotsCollectionSubscription();
+    super.dispose();
+  }
+
   void selectDateId(String dateId) async {
-    _selectedDateId = dateId;
+    patchState({TimeSlotsStateKeys.selectedDateId.name: dateId});
 
-    _switchListenToOtherTimeSlotsCollection(selectedDateId!, selectedLocation!);
-
-    notifyListeners();
+    _switchListenToOtherTimeSlotsCollection(dateId, state['selectedLocation']);
   }
 
   void selectLocation(Location location) async {
-    _selectedLocation = location;
+    patchState({TimeSlotsStateKeys.selectedLocation.name: location});
 
-    _switchListenToOtherTimeSlotsCollection(selectedDateId!, selectedLocation!);
-
-    notifyListeners();
+    _switchListenToOtherTimeSlotsCollection(state['selectedDateId'], location);
   }
 
-  _initialize() async {
-    _loading = true;
+  void _initialize() async {
+    patchState({TimeSlotsStateKeys.loading.name: true});
 
-    notifyListeners();
+    dataProvider.getLocations().then((locations) async {
+      patchState({
+        TimeSlotsStateKeys.locations.name: locations,
+        TimeSlotsStateKeys.teachers.name: await dataProvider.getTeachers(),
+        TimeSlotsStateKeys.selectedLocation.name: locations[0],
+        TimeSlotsStateKeys.selectedDateId.name: _generateDateId(),
+        TimeSlotsStateKeys.loading.name: false
+      });
 
-    _locations = await _getLocations();
-    _teachers = await _getTeachers();
-    _selectedLocation = _locations[0];
-    _selectedDateId = _generateDateId();
-    _loading = false;
-
-    notifyListeners();
-
-    _switchListenToOtherTimeSlotsCollection(selectedDateId!, selectedLocation!);
+      _switchListenToOtherTimeSlotsCollection(state['selectedDateId'], state['selectedLocation']);
+    });
   }
 
   void _switchListenToOtherTimeSlotsCollection(String selectedDateId, Location selectedLocation) {
@@ -83,19 +64,11 @@ class TimeSlotsModel extends ChangeNotifier {
   }
 
   void _listenToRespectiveTimeSlotsCollection(String selectedDateId, Location selectedLocation) async {
-    _activeSubscription = dataProvider.getTimeSlotsCollectionStream$(selectedDateId, selectedLocation).listen((timeSLots) {
-      _timeSlots = timeSLots;
-
-      notifyListeners();
+    _activeSubscription = dataProvider
+        .getTimeSlotsCollectionStream$(selectedDateId, selectedLocation, authenticationModel.getCurrentLoggedInUser()!.uid)
+        .listen((timeSLots) {
+      patchState({TimeSlotsStateKeys.timeSlots.name: timeSLots});
     });
-  }
-
-  Future<List<Location>> _getLocations() async {
-    return dataProvider.getLocations();
-  }
-
-  Future<List<Teacher>> _getTeachers() async {
-    return dataProvider.getTeachers();
   }
 
   String _generateDateId() {

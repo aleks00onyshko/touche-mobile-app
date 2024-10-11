@@ -34,11 +34,4 @@ void main() async {
       debugShowCheckedModeBanner: false,
       debugShowMaterialGrid: false,
       routerConfig: touche_router));
-  // home: SafeArea(
-  //     child: Scaffold(
-  //         backgroundColor: Colors.grey[900],
-  //         resizeToAvoidBottomInset: false,
-  //         body: const Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-  //           Expanded(child: Column(children: [TimeSlots()]))
-  //         ])))));
 }

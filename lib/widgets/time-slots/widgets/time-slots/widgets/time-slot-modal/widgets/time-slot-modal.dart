@@ -65,8 +65,10 @@ class TimeSlotModal extends StatelessWidget {
                                 child: Text(model.state['selectedTeacher'].description),
                               ),
                               Center(
-                                  child:
-                                      BookButton(booked: model.state['booked'], onBookTapped: () => model.toggleBookedState())),
+                                  child: BookButton(
+                                      booked: model.state['booked'],
+                                      disabled: model.state['bookButtonDisabled'],
+                                      onBookTapped: () => model.toggleBookedState())),
                             ],
                           ),
                         ),

@@ -10,7 +10,6 @@ class TimeSlot implements Entity<String> {
       required this.locationId,
       required this.startTime,
       required this.booked,
-      this.selectedTeacherId,
       this.attendeeId});
 
   @override
@@ -20,9 +19,8 @@ class TimeSlot implements Entity<String> {
   late List<String> teachersIds;
   late String dateId;
   late String locationId;
-  late String? selectedTeacherId;
-  late String? attendeeId;
   late bool booked;
+  late String? attendeeId;
 
   @override
   factory TimeSlot.fromJson(Map<String, dynamic> json) {
@@ -30,13 +28,13 @@ class TimeSlot implements Entity<String> {
         id: json['id'],
         duration: json['duration'],
         teachersIds: List.from(json['teachersIds']),
-        selectedTeacherId: json['selectedTeacherId'],
         dateId: json['dateId'],
         locationId: json['locationId'],
         startTime: Tuple2<int, int>(
           json['startTime'][0] as int,
           json['startTime'][1] as int,
         ),
+        attendeeId: json['attendeeId'] ?? '',
         booked: (json['booked'] ?? false) as bool);
   }
 
@@ -46,9 +44,11 @@ class TimeSlot implements Entity<String> {
       'id': id,
       'duration': duration,
       'teachersIds': teachersIds,
-      'selectedTeacherId': selectedTeacherId,
       'dateId': dateId,
+      'locationId': locationId,
+      'booked': booked,
       'startTime': startTime,
+      'attendeeId': attendeeId ?? ''
     };
   }
 }

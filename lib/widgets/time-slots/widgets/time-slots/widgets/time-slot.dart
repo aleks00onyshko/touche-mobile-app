@@ -13,7 +13,7 @@ class TimeSlotCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<TimeSlotsModel>(builder: (context, timeSlotsModel, child) {
-      final List<Teacher> teachers = timeSlotsModel.teachers;
+      final List<Teacher> teachers = timeSlotsModel.state['teachers'];
       final Teacher teacher = teachers.where((teacher) => teacher.id == timeSlot.teachersIds[0]).toList().first;
 
       return SizedBox(

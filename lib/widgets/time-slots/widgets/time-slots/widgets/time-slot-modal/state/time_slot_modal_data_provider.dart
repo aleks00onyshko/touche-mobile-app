@@ -37,8 +37,12 @@ class TimeSlotModalDataProvider {
     return querySnapshot.docs.map((doc) => doc.data()).toList();
   }
 
-  // TODO: move args into some interface
-  Future<void> setTimeSlotBookedState(bool booked, String timeSlotId, String dateId, String locationId) async {
-    return firebaseApp.doc('dateIds/$dateId/$locationId-slots/$timeSlotId').update({'booked': booked});
+  Future<void> setTimeSlotBookedState(
+      {required bool booked,
+      required String attendeeId,
+      required String timeSlotId,
+      required String dateId,
+      required String locationId}) async {
+    return firebaseApp.doc('dateIds/$dateId/$locationId-slots/$timeSlotId').update({'booked': booked, 'attendeeId': attendeeId});
   }
 }
