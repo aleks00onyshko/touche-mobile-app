@@ -10,7 +10,8 @@ class TimeSlot implements Entity<String> {
       required this.locationId,
       required this.startTime,
       required this.booked,
-      this.attendeeId});
+      this.attendeeId,
+      this.selectedTeacherId});
 
   @override
   late String id;
@@ -21,6 +22,7 @@ class TimeSlot implements Entity<String> {
   late String locationId;
   late bool booked;
   late String? attendeeId;
+  late String? selectedTeacherId;
 
   @override
   factory TimeSlot.fromJson(Map<String, dynamic> json) {
@@ -35,6 +37,7 @@ class TimeSlot implements Entity<String> {
           json['startTime'][1] as int,
         ),
         attendeeId: json['attendeeId'] ?? '',
+        selectedTeacherId: json['selectedTeacherId'] ?? '',
         booked: (json['booked'] ?? false) as bool);
   }
 
@@ -48,7 +51,8 @@ class TimeSlot implements Entity<String> {
       'locationId': locationId,
       'booked': booked,
       'startTime': startTime,
-      'attendeeId': attendeeId ?? ''
+      'attendeeId': attendeeId ?? '',
+      'selectedTeacherId': selectedTeacherId ?? ''
     };
   }
 }

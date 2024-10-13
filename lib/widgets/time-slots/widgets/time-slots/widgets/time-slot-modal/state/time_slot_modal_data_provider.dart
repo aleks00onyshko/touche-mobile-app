@@ -42,7 +42,10 @@ class TimeSlotModalDataProvider {
       required String attendeeId,
       required String timeSlotId,
       required String dateId,
-      required String locationId}) async {
-    return firebaseApp.doc('dateIds/$dateId/$locationId-slots/$timeSlotId').update({'booked': booked, 'attendeeId': attendeeId});
+      required String locationId,
+      required String selectedTeacherId}) async {
+    return firebaseApp
+        .doc('dateIds/$dateId/$locationId-slots/$timeSlotId')
+        .update({'booked': booked, 'attendeeId': attendeeId, 'selectedTeacherId': selectedTeacherId});
   }
 }

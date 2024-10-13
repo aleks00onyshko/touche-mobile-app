@@ -28,11 +28,13 @@ class TimeSlotModalModel extends StateChangeNotifier {
     patchState({
       TimeSlotModalStateKeys.booked.name: !state['booked'],
       TimeSlotModalStateKeys.attendeeId.name: state['booked'] ? '' : authenticationModel.getCurrentLoggedInUser()!.uid,
+      TimeSlotModalStateKeys.selectedTeacher.name: state['booked'] ? null : state['selectedTeacher'],
     });
 
     await dataProvider.setTimeSlotBookedState(
         booked: state['booked'],
         attendeeId: state['attendeeId'],
+        selectedTeacherId: state['booked'] ? state['selectedTeacher'].id : '',
         timeSlotId: timeSlot.id,
         dateId: timeSlot.dateId,
         locationId: timeSlot.locationId);
@@ -79,7 +81,6 @@ class TimeSlotModalModel extends StateChangeNotifier {
   void _listenToTimeSlotDocChanges(TimeSlot timeSlot) {
     _activeSubscription = dataProvider
         .getTimeSlotDocumentStream$(timeSlot.id, timeSlot.dateId, timeSlot.locationId)
-        .skip(1)
         .listen((incomingTimeSlot) => _updateSignals(incomingTimeSlot));
   }
 
@@ -95,7 +96,9 @@ class TimeSlotModalModel extends StateChangeNotifier {
       patchState({
         TimeSlotModalStateKeys.teachers.name: teachers,
         TimeSlotModalStateKeys.loading.name: false,
-        TimeSlotModalStateKeys.selectedTeacher.name: teachers.first,
+        TimeSlotModalStateKeys.selectedTeacher.name:
+            teachers.firstWhere((teacher) => teacher.id == timeSlot.selectedTeacherId, orElse: () => teachers.first),
+        TimeSlotModalStateKeys.bookButtonDisabled.name: timeSlot.attendeeId != authenticationModel.getCurrentLoggedInUser()!.uid,
         TimeSlotModalStateKeys.booked.name: timeSlot.booked,
         TimeSlotModalStateKeys.duration.name: timeSlot.duration
       });
@@ -107,7 +110,7 @@ class TimeSlotModalModel extends StateChangeNotifier {
       patchState({
         TimeSlotModalStateKeys.teachers.name: teachers,
         TimeSlotModalStateKeys.selectedTeacher.name: teachers.firstWhere((teacher) {
-          return teacher.id == state['selectedTeacher'];
+          return teacher.id == state['selectedTeacher'].id;
         }, orElse: () => teachers.first)
       });
     });
