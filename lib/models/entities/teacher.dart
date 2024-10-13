@@ -1,21 +1,19 @@
 import 'package:touche_app/models/entities/entity.dart';
 
-class Teacher implements Entity<String> {
+import 'user.dart';
+
+class Teacher extends User implements Entity<String> {
   Teacher(
-      {required this.id,
-      required this.displayName,
-      required this.backgroundImageUrl,
-      required this.email,
-      required this.uid,
+      {required super.id,
+      required super.displayName,
+      required super.backgroundImageUrl,
+      required super.email,
+      required super.uid,
+      required this.number,
       required this.description});
 
-  @override
-  late String id;
-  late String displayName;
   late String description;
-  late String backgroundImageUrl;
-  late String email;
-  late String uid;
+  late String number;
 
   @override
   factory Teacher.fromJson(Map<String, dynamic> json) {
@@ -23,6 +21,7 @@ class Teacher implements Entity<String> {
         id: json['id'],
         displayName: json['displayName'],
         email: json['email'],
+        number: json['number'],
         uid: json['uid'],
         backgroundImageUrl: json['imageUrl'] ?? '',
         description: json['description'] ?? '');
@@ -30,6 +29,14 @@ class Teacher implements Entity<String> {
 
   @override
   toJson() {
-    return {'id': id, 'displayName': displayName, 'email': email, 'uid': uid};
+    return {
+      'id': id,
+      'displayName': displayName,
+      'email': email,
+      'uid': uid,
+      'number': number,
+      'backgroundImageUrl': backgroundImageUrl,
+      'description': description
+    };
   }
 }

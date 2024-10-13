@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:touche_app/core/DI/root-locator.dart';
 import 'package:touche_app/models/entities/location.dart';
 import 'package:touche_app/models/entities/time-slot.dart';
 import 'package:touche_app/widgets/shared/widgets/loading.dart';
@@ -11,7 +10,9 @@ import 'package:touche_app/widgets/time-slots/widgets/time-slots/widgets/time-sl
 import 'package:touche_app/widgets/time-slots/widgets/time-slots/widgets/time-slots-list.dart';
 
 class TimeSlots extends StatelessWidget {
-  const TimeSlots({super.key});
+  final TimeSlotsModel model;
+
+  const TimeSlots({super.key, required this.model});
 
   void _showCustomModalBottomSheet(BuildContext context, TimeSlot timeSlot) {
     showModalBottomSheet(
@@ -41,7 +42,7 @@ class TimeSlots extends StatelessWidget {
               child: Column(
                 children: [
                   ChangeNotifierProvider(
-                      create: (context) => locator.get<TimeSlotsModel>(),
+                      create: (context) => model,
                       child: Consumer<TimeSlotsModel>(builder: (context, timeSlotsModel, child) {
                         if (timeSlotsModel.state['loading']) {
                           return const Center(child: Loading());

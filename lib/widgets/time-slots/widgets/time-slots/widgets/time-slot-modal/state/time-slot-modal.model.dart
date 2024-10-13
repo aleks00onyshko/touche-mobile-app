@@ -16,7 +16,9 @@ class TimeSlotModalModel extends StateChangeNotifier {
   late StreamSubscription<TimeSlot>? _activeSubscription;
 
   final Signal<List<String>> _teachersIdsSignal = signal([]);
+  late EffectCallback _teachersIdsEffectDisposeFn;
   final Signal<String> _atendeeIdSignal = signal('');
+  late EffectCallback _atendeeIdEffectDisposeFn;
 
   void changeSelectedTeacher(Teacher teacher) {
     patchState({TimeSlotModalStateKeys.selectedTeacher.name: teacher});
@@ -50,13 +52,13 @@ class TimeSlotModalModel extends StateChangeNotifier {
   void _initializeListeners(TimeSlot timeSlot) {
     _listenToTimeSlotDocChanges(timeSlot);
 
-    effect(() {
+    _teachersIdsEffectDisposeFn = effect(() {
       if (_teachersIdsSignal.value.isNotEmpty) {
         _loadAndReplaceTeachers(_teachersIdsSignal.value);
       }
     });
 
-    effect(() {
+    _atendeeIdEffectDisposeFn = effect(() {
       if (_atendeeIdSignal.value.isNotEmpty) {
         patchState({
           TimeSlotModalStateKeys.attendeeId.name: _atendeeIdSignal.value,
@@ -119,6 +121,8 @@ class TimeSlotModalModel extends StateChangeNotifier {
   void dispose() {
     super.dispose();
     _cancelActiveTimeSlotCollectionSubscription();
+    _teachersIdsEffectDisposeFn();
+    _atendeeIdEffectDisposeFn();
   }
 
   void _cancelActiveTimeSlotCollectionSubscription() async {
