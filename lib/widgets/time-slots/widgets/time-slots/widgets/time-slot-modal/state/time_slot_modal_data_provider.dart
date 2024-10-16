@@ -7,7 +7,7 @@ class TimeSlotModalDataProvider {
   final FirebaseFirestore firebaseApp;
 
   TimeSlotModalDataProvider({required this.firebaseApp});
-  // TODO: think about error handling
+
   Stream<TimeSlot> getTimeSlotDocumentStream$(String timeSlotId, String dateId, String locationId) {
     final DocumentReference<TimeSlot> timeSlotRef = firebaseApp
         .collection('dateIds/$dateId/$locationId-slots')
@@ -37,15 +37,23 @@ class TimeSlotModalDataProvider {
     return querySnapshot.docs.map((doc) => doc.data()).toList();
   }
 
-  Future<void> setTimeSlotBookedState(
-      {required bool booked,
-      required String attendeeId,
-      required String timeSlotId,
-      required String dateId,
-      required String locationId,
-      required String selectedTeacherId}) async {
-    return firebaseApp
-        .doc('dateIds/$dateId/$locationId-slots/$timeSlotId')
-        .update({'booked': booked, 'attendeeId': attendeeId, 'selectedTeacherId': selectedTeacherId});
+  Future<void> bookTimeSlot(TimeSlot timeSlot, String attendeeId, String selectedTeacherId) async {
+    try {
+      await firebaseApp
+          .doc('dateIds/${timeSlot.dateId}/${timeSlot.locationId}-slots/${timeSlot.id}')
+          .update({'booked': true, 'attendeeId': attendeeId, 'selectedTeacherId': selectedTeacherId});
+    } catch (e) {
+      throw Exception('Failed to book time slot');
+    }
+  }
+
+  Future<void> unBookTimeSlot(TimeSlot timeSlot) async {
+    try {
+      await firebaseApp
+          .doc('dateIds/${timeSlot.dateId}/${timeSlot.locationId}-slots/${timeSlot.id}')
+          .update({'booked': false, 'attendeeId': '', 'selectedTeacherId': ''});
+    } catch (e) {
+      throw Exception('Failed to unbook time slot');
+    }
   }
 }

@@ -6,7 +6,7 @@ import 'package:touche_app/widgets/authentication/widgets/state/authentication.m
 import 'package:touche_app/widgets/shared/widgets/loading.dart';
 
 class Authentication extends StatelessWidget {
-  Authentication({super.key});
+  const Authentication({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +32,7 @@ class Authentication extends StatelessWidget {
                         touche_router.go('/timeSlots');
                       });
                     },
-                    child: Text('Sign in with Google'),
+                    child: const Text('Sign in with Google'),
                   ),
                 ],
               )));

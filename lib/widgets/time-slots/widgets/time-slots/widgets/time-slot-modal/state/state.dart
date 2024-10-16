@@ -1,7 +1,7 @@
 import 'package:touche_app/core/state-change-notifier/state.dart';
 import 'package:touche_app/models/entities/teacher.dart';
 
-enum TimeSlotModalStateKeys { loading, teachers, booked, duration, selectedTeacher, attendeeId, bookButtonDisabled }
+enum TimeSlotModalStateKeys { loading, teachers, booked, duration, selectedTeacher, attendeeId, bookButtonDisabled, snackbarText }
 
 interface class TimeSlotModalState implements ChangeNotifierState {
   late bool loading = false;
@@ -9,7 +9,8 @@ interface class TimeSlotModalState implements ChangeNotifierState {
   late bool booked = false;
   late int duration = 0;
   late bool bookButtonDisabled = false;
-  String? attendeeId;
+  late String attendeeId = '';
+  late String snackbarText = '';
   Teacher? selectedTeacher;
 
   @override
@@ -21,7 +22,8 @@ interface class TimeSlotModalState implements ChangeNotifierState {
       TimeSlotModalStateKeys.duration.name: duration,
       TimeSlotModalStateKeys.selectedTeacher.name: selectedTeacher,
       TimeSlotModalStateKeys.attendeeId.name: attendeeId,
-      TimeSlotModalStateKeys.bookButtonDisabled.name: bookButtonDisabled
+      TimeSlotModalStateKeys.bookButtonDisabled.name: bookButtonDisabled,
+      TimeSlotModalStateKeys.snackbarText.name: snackbarText
     };
   }
 }

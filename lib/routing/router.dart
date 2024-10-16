@@ -28,7 +28,7 @@ final touche_router = GoRouter(
     ),
     GoRoute(
       path: '/authentication',
-      builder: (context, state) => Authentication(),
+      builder: (context, state) => const Authentication(),
     ),
   ],
   redirect: (context, state) {

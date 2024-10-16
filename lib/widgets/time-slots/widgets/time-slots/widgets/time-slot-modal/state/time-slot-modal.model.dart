@@ -15,29 +15,48 @@ class TimeSlotModalModel extends StateChangeNotifier {
 
   late StreamSubscription<TimeSlot>? _activeSubscription;
 
-  final Signal<List<String>> _teachersIdsSignal = signal([]);
+  final Signal<List<String>> _teachersIdsSignal = signal([], autoDispose: true);
   late EffectCallback _teachersIdsEffectDisposeFn;
-  final Signal<String> _atendeeIdSignal = signal('');
+  final Signal<String?> _atendeeIdSignal = signal(null, autoDispose: true);
   late EffectCallback _atendeeIdEffectDisposeFn;
 
   void changeSelectedTeacher(Teacher teacher) {
     patchState({TimeSlotModalStateKeys.selectedTeacher.name: teacher});
   }
 
-  void toggleBookedState() async {
-    patchState({
-      TimeSlotModalStateKeys.booked.name: !state['booked'],
-      TimeSlotModalStateKeys.attendeeId.name: state['booked'] ? '' : authenticationModel.getCurrentLoggedInUser()!.uid,
-      TimeSlotModalStateKeys.selectedTeacher.name: state['booked'] ? null : state['selectedTeacher'],
-    });
+  void bookTimeSlot() async {
+    try {
+      patchState({
+        TimeSlotModalStateKeys.booked.name: true,
+        TimeSlotModalStateKeys.attendeeId.name: authenticationModel.getCurrentLoggedInUser()!.uid,
+      });
+      await dataProvider.bookTimeSlot(timeSlot, authenticationModel.getCurrentLoggedInUser()!.uid, state['selectedTeacher'].id);
+    } catch (e) {
+      patchState({TimeSlotModalStateKeys.booked.name: false});
+      showSnackbar('Error booking the time slot. Please try again.');
+    }
+  }
 
-    await dataProvider.setTimeSlotBookedState(
-        booked: state['booked'],
-        attendeeId: state['attendeeId'],
-        selectedTeacherId: state['booked'] ? state['selectedTeacher'].id : '',
-        timeSlotId: timeSlot.id,
-        dateId: timeSlot.dateId,
-        locationId: timeSlot.locationId);
+  void unBookTimeSlot() async {
+    try {
+      patchState({
+        TimeSlotModalStateKeys.booked.name: false,
+        TimeSlotModalStateKeys.attendeeId.name: '',
+      });
+
+      await dataProvider.unBookTimeSlot(timeSlot);
+    } catch (e) {
+      patchState({TimeSlotModalStateKeys.booked.name: true});
+      showSnackbar('Error unbooking the time slot. Please try again.');
+    }
+  }
+
+  void showSnackbar(String text) {
+    patchState({TimeSlotModalStateKeys.snackbarText.name: text});
+  }
+
+  void closeSnackbar() {
+    patchState({TimeSlotModalStateKeys.snackbarText.name: ''});
   }
 
   TimeSlotModalModel(TimeSlotModalState super.initialState,
@@ -55,24 +74,18 @@ class TimeSlotModalModel extends StateChangeNotifier {
     _listenToTimeSlotDocChanges(timeSlot);
 
     _teachersIdsEffectDisposeFn = effect(() {
-      if (_teachersIdsSignal.value.isNotEmpty) {
+      if (_teachersIdsSignal.value.isNotEmpty && _teachersIdsSignal.previousValue?.length != _teachersIdsSignal.value.length) {
         _loadAndReplaceTeachers(_teachersIdsSignal.value);
       }
     });
 
     _atendeeIdEffectDisposeFn = effect(() {
-      if (_atendeeIdSignal.value.isNotEmpty) {
+      if (_atendeeIdSignal.value != null) {
         patchState({
           TimeSlotModalStateKeys.attendeeId.name: _atendeeIdSignal.value,
-          TimeSlotModalStateKeys.booked.name: true,
+          TimeSlotModalStateKeys.booked.name: (_atendeeIdSignal.value as String).isNotEmpty,
           TimeSlotModalStateKeys.bookButtonDisabled.name:
-              _atendeeIdSignal.value != authenticationModel.getCurrentLoggedInUser()!.uid
-        });
-      } else {
-        patchState({
-          TimeSlotModalStateKeys.attendeeId.name: '',
-          TimeSlotModalStateKeys.booked.name: false,
-          TimeSlotModalStateKeys.bookButtonDisabled.name: false
+              _atendeeIdSignal.value!.isNotEmpty && _atendeeIdSignal.value != authenticationModel.getCurrentLoggedInUser()!.uid
         });
       }
     });
@@ -81,6 +94,7 @@ class TimeSlotModalModel extends StateChangeNotifier {
   void _listenToTimeSlotDocChanges(TimeSlot timeSlot) {
     _activeSubscription = dataProvider
         .getTimeSlotDocumentStream$(timeSlot.id, timeSlot.dateId, timeSlot.locationId)
+        .skip(1)
         .listen((incomingTimeSlot) => _updateSignals(incomingTimeSlot));
   }
 
@@ -93,12 +107,17 @@ class TimeSlotModalModel extends StateChangeNotifier {
     patchState({TimeSlotModalStateKeys.loading.name: true});
 
     return _loadTeachers(timeSlot.teachersIds).then((teachers) {
+      print(
+          'in load ${teachers.firstWhere((teacher) => teacher.id == timeSlot.selectedTeacherId, orElse: () => teachers.first).displayName}');
+
       patchState({
         TimeSlotModalStateKeys.teachers.name: teachers,
         TimeSlotModalStateKeys.loading.name: false,
         TimeSlotModalStateKeys.selectedTeacher.name:
             teachers.firstWhere((teacher) => teacher.id == timeSlot.selectedTeacherId, orElse: () => teachers.first),
-        TimeSlotModalStateKeys.bookButtonDisabled.name: timeSlot.attendeeId != authenticationModel.getCurrentLoggedInUser()!.uid,
+        TimeSlotModalStateKeys.bookButtonDisabled.name: timeSlot.attendeeId != null &&
+            timeSlot.attendeeId!.isNotEmpty &&
+            timeSlot.attendeeId != authenticationModel.getCurrentLoggedInUser()!.uid,
         TimeSlotModalStateKeys.booked.name: timeSlot.booked,
         TimeSlotModalStateKeys.duration.name: timeSlot.duration
       });

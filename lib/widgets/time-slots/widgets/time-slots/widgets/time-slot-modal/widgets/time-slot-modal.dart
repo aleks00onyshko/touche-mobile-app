@@ -19,64 +19,89 @@ class TimeSlotModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<TimeSlotModalModel>.value(
-      value: locator.get<TimeSlotModalModel>(
+    return ChangeNotifierProvider<TimeSlotModalModel>(
+      create: (context) => locator.get<TimeSlotModalModel>(
         param1: locator.get<TimeSlotModalDataProvider>(),
         param2: timeSlot,
       ),
       child: Consumer<TimeSlotModalModel>(
         builder: (context, model, child) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if ((model.state['snackbarText'] as String).isNotEmpty) {
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(
+                    SnackBar(
+                      content: Text(model.state['snackbarText']!),
+                      duration: const Duration(seconds: 2), // SnackBar will be shown for 2 seconds
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  )
+                  .closed
+                  .then((reason) {
+                // Clear the message after the SnackBar is dismissed
+                model.closeSnackbar(); // Call your method to clear the message
+              });
+            }
+          });
+
           if (model.state['loading']) {
             return const Center(child: Loading());
           }
 
           return Padding(
             padding: const EdgeInsets.only(top: 30),
-            child: Stack(
-              children: [
-                FractionallySizedBox(
-                  heightFactor: 0.9,
-                  child: CustomScrollView(
-                    slivers: [
-                      SliverAppBar(
-                        automaticallyImplyLeading: false,
-                        pinned: true,
-                        expandedHeight: MediaQuery.of(context).size.height * 0.45,
-                        flexibleSpace: FlexibleSpaceBar(
-                          background: TeacherImageSwitcher(
-                            teachers: model.state['teachers'],
-                            booked: model.state['booked'],
-                            selectedTeacher: model.state['selectedTeacher'],
-                            selectedTeacherChanged: (teacher) => {model.changeSelectedTeacher(teacher)},
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.8,
+              child: Scaffold(
+                body: Stack(
+                  children: [
+                    FractionallySizedBox(
+                      child: CustomScrollView(
+                        slivers: [
+                          SliverAppBar(
+                            automaticallyImplyLeading: false,
+                            pinned: true,
+                            expandedHeight: MediaQuery.of(context).size.height * 0.45,
+                            flexibleSpace: FlexibleSpaceBar(
+                              background: TeacherImageSwitcher(
+                                  teachers: model.state['teachers'],
+                                  booked: model.state['booked'],
+                                  selectedTeacher: model.state['selectedTeacher'],
+                                  selectedTeacherChanged: (teacher) {
+                                    print('selected triggered?');
+                                    model.changeSelectedTeacher(teacher);
+                                  }),
+                              collapseMode: CollapseMode.parallax,
+                              stretchModes: const [StretchMode.zoomBackground],
+                            ),
                           ),
-                          collapseMode: CollapseMode.parallax,
-                          stretchModes: const [StretchMode.zoomBackground],
-                        ),
-                      ),
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              TeacherName(selectedTeacher: model.state['selectedTeacher']),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
-                                child: Text(model.state['selectedTeacher'].description),
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  TeacherName(selectedTeacher: model.state['selectedTeacher']),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+                                    child: Text(model.state['selectedTeacher'].description),
+                                  ),
+                                  Center(
+                                      child: BookButton(
+                                          booked: model.state['booked'],
+                                          disabled: model.state['bookButtonDisabled'],
+                                          onBookTapped: () =>
+                                              model.state['booked'] ? model.unBookTimeSlot() : model.bookTimeSlot())),
+                                ],
                               ),
-                              Center(
-                                  child: BookButton(
-                                      booked: model.state['booked'],
-                                      disabled: model.state['bookButtonDisabled'],
-                                      onBookTapped: () => model.toggleBookedState())),
-                            ],
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
-                )
-              ],
+                    )
+                  ],
+                ),
+              ),
             ),
           );
         },

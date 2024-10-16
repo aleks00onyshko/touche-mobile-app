@@ -39,7 +39,9 @@ class _TeacherImageSwitcherState extends State<TeacherImageSwitcher> {
             pageSnapping: true,
             initialPage: _getSelectedTeacherIndex(widget.teachers, widget.selectedTeacher),
             onPageChanged: (index, reason) {
-              widget.selectedTeacherChanged(widget.teachers[index]);
+              if (reason == CarouselPageChangedReason.manual) {
+                widget.selectedTeacherChanged(widget.teachers[index]);
+              }
             }),
         items: (widget.booked ? [widget.selectedTeacher] : widget.teachers).map(
           (teacher) {
