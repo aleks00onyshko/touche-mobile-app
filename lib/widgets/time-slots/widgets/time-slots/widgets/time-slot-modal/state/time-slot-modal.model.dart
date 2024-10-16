@@ -24,7 +24,7 @@ class TimeSlotModalModel extends StateChangeNotifier {
     patchState({TimeSlotModalStateKeys.selectedTeacher.name: teacher});
   }
 
-  void bookTimeSlot() async {
+  Future<void> bookTimeSlot() async {
     try {
       patchState({
         TimeSlotModalStateKeys.booked.name: true,
@@ -32,12 +32,14 @@ class TimeSlotModalModel extends StateChangeNotifier {
       });
       await dataProvider.bookTimeSlot(timeSlot, authenticationModel.getCurrentLoggedInUser()!.uid, state['selectedTeacher'].id);
     } catch (e) {
-      patchState({TimeSlotModalStateKeys.booked.name: false});
-      showSnackbar('Error booking the time slot. Please try again.');
+      patchState({
+        TimeSlotModalStateKeys.booked.name: false,
+        TimeSlotModalStateKeys.snackbarText.name: 'Error booking the time slot. Please try again.'
+      });
     }
   }
 
-  void unBookTimeSlot() async {
+  Future<void> unBookTimeSlot() async {
     try {
       patchState({
         TimeSlotModalStateKeys.booked.name: false,
@@ -46,13 +48,11 @@ class TimeSlotModalModel extends StateChangeNotifier {
 
       await dataProvider.unBookTimeSlot(timeSlot);
     } catch (e) {
-      patchState({TimeSlotModalStateKeys.booked.name: true});
-      showSnackbar('Error unbooking the time slot. Please try again.');
+      patchState({
+        TimeSlotModalStateKeys.booked.name: true,
+        TimeSlotModalStateKeys.snackbarText.name: 'Error unbooking the time slot. Please try again.'
+      });
     }
-  }
-
-  void showSnackbar(String text) {
-    patchState({TimeSlotModalStateKeys.snackbarText.name: text});
   }
 
   void closeSnackbar() {
@@ -106,9 +106,8 @@ class TimeSlotModalModel extends StateChangeNotifier {
   Future<void> _loadAndSetInitialData(TimeSlot timeSlot) async {
     patchState({TimeSlotModalStateKeys.loading.name: true});
 
-    return _loadTeachers(timeSlot.teachersIds).then((teachers) {
-      print(
-          'in load ${teachers.firstWhere((teacher) => teacher.id == timeSlot.selectedTeacherId, orElse: () => teachers.first).displayName}');
+    try {
+      final List<Teacher> teachers = await _loadTeachers(timeSlot.teachersIds);
 
       patchState({
         TimeSlotModalStateKeys.teachers.name: teachers,
@@ -118,10 +117,16 @@ class TimeSlotModalModel extends StateChangeNotifier {
         TimeSlotModalStateKeys.bookButtonDisabled.name: timeSlot.attendeeId != null &&
             timeSlot.attendeeId!.isNotEmpty &&
             timeSlot.attendeeId != authenticationModel.getCurrentLoggedInUser()!.uid,
+        TimeSlotModalStateKeys.attendeeId.name: timeSlot.attendeeId ?? '',
         TimeSlotModalStateKeys.booked.name: timeSlot.booked,
         TimeSlotModalStateKeys.duration.name: timeSlot.duration
       });
-    });
+    } catch (e) {
+      patchState({
+        TimeSlotModalStateKeys.booked.name: true,
+        TimeSlotModalStateKeys.snackbarText.name: 'Error during initialization, try later please!'
+      });
+    }
   }
 
   Future<void> _loadAndReplaceTeachers(List<String> teachersIds) async {

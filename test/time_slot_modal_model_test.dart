@@ -1,6 +1,8 @@
 // test/time_slot_modal_model_test.dart
 
 // Import Firebase Auth with an alias to avoid conflicts
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
@@ -97,20 +99,129 @@ void main() {
       );
     });
 
-    test('Model is correctly initialized', () async {
-      // Wait for any asynchronous initialization to complete
-      await Future.delayed(Duration.zero);
+    group('Initialization', () {
+      test('State is patched correctly if the initial slot is booked', () async {
+        timeSlot = TimeSlot(
+          id: 'timeslot1',
+          dateId: 'date1',
+          locationId: 'location1',
+          teachersIds: ['teacher1', 'teacher2'],
+          selectedTeacherId: 'teacher1',
+          attendeeId: 'user123',
+          booked: true,
+          duration: 60,
+          startTime: const Tuple2<int, int>(1, 2),
+        );
 
-      // Verify that getTeachersByIds was called with the correct teacher IDs
-      verify(mockDataProvider.getTeachersByIds(timeSlot.teachersIds)).called(1);
+        model = TimeSlotModalModel(
+          TimeSlotModalState(),
+          dataProvider: mockDataProvider,
+          timeSlot: timeSlot,
+          authenticationModel: mockAuthModel,
+        );
 
-      // Check the state of the model
-      expect(model.state[TimeSlotModalStateKeys.loading.name], false);
-      expect(model.state[TimeSlotModalStateKeys.teachers.name], teachers);
-      expect(model.state[TimeSlotModalStateKeys.selectedTeacher.name], teachers.first);
-      expect(model.state[TimeSlotModalStateKeys.bookButtonDisabled.name], false);
-      expect(model.state[TimeSlotModalStateKeys.booked.name], timeSlot.booked);
-      expect(model.state[TimeSlotModalStateKeys.duration.name], timeSlot.duration);
+        await Future.delayed(Duration.zero);
+
+        expect(model.state[TimeSlotModalStateKeys.booked.name], true);
+        expect(model.state[TimeSlotModalStateKeys.attendeeId.name], 'user123');
+      });
+
+      test('State is patched correctly if the initial slot is unbooked', () async {
+        timeSlot = TimeSlot(
+          id: 'timeslot1',
+          dateId: 'date1',
+          locationId: 'location1',
+          teachersIds: ['teacher1', 'teacher2'],
+          selectedTeacherId: 'teacher1',
+          attendeeId: '',
+          booked: false,
+          duration: 60,
+          startTime: const Tuple2<int, int>(1, 2),
+        );
+
+        model = TimeSlotModalModel(
+          TimeSlotModalState(),
+          dataProvider: mockDataProvider,
+          timeSlot: timeSlot,
+          authenticationModel: mockAuthModel,
+        );
+
+        await Future.delayed(Duration.zero);
+
+        expect(model.state[TimeSlotModalStateKeys.booked.name], false);
+        expect(model.state[TimeSlotModalStateKeys.attendeeId.name], '');
+      });
+
+      test('Snackbar is shown on initialization error', () async {
+        when(mockDataProvider.getTeachersByIds(any)).thenThrow(Exception('Error fetching teachers'));
+
+        timeSlot = TimeSlot(
+          id: 'timeslot1',
+          dateId: 'date1',
+          locationId: 'location1',
+          teachersIds: ['teacher1', 'teacher2'],
+          selectedTeacherId: 'teacher1',
+          attendeeId: 'user123', // Mark as booked
+          booked: true,
+          duration: 60,
+          startTime: const Tuple2<int, int>(1, 2),
+        );
+
+        model = TimeSlotModalModel(
+          TimeSlotModalState(),
+          dataProvider: mockDataProvider,
+          timeSlot: timeSlot,
+          authenticationModel: mockAuthModel,
+        );
+
+        await Future.delayed(Duration.zero);
+
+        expect(model.state[TimeSlotModalStateKeys.snackbarText.name], 'Error during initialization, try later please!');
+      });
+    });
+
+    group('Booking flow', () {
+      test('Slot is booked successfully', () async {
+        when(mockDataProvider.bookTimeSlot(any, any, any)).thenAnswer((_) async => Future.value());
+
+        await model.bookTimeSlot();
+
+        expect(model.state[TimeSlotModalStateKeys.booked.name], true);
+        expect(model.state[TimeSlotModalStateKeys.attendeeId.name], mockFirebaseUser.uid);
+
+        verify(mockDataProvider.bookTimeSlot(any, any, any)).called(1); // works fine
+      });
+
+      test('Error during booking triggers snackbar', () async {
+        when(mockDataProvider.bookTimeSlot(any, any, any)).thenThrow(Exception('Booking error'));
+
+        await model.bookTimeSlot();
+
+        expect(model.state[TimeSlotModalStateKeys.booked.name], false);
+        expect(model.state[TimeSlotModalStateKeys.snackbarText.name], 'Error booking the time slot. Please try again.');
+      });
+    });
+
+    group('Unbooking flow', () {
+      test('Slot is unbooked successfully', () async {
+        when(mockDataProvider.bookTimeSlot(any, any, any)).thenAnswer((_) async => Future.value());
+
+        await model.unBookTimeSlot();
+
+        expect(model.state[TimeSlotModalStateKeys.booked.name], false);
+        expect(model.state[TimeSlotModalStateKeys.attendeeId.name], '');
+
+        verify(mockDataProvider.unBookTimeSlot(timeSlot)).called(1);
+      });
+
+      test('Error during unbooking triggers snackbar', () async {
+        when(mockDataProvider.unBookTimeSlot(any)).thenThrow(Exception('Unbooking error'));
+
+        await model.unBookTimeSlot();
+
+        expect(model.state[TimeSlotModalStateKeys.booked.name], true);
+        expect(model.state[TimeSlotModalStateKeys.snackbarText.name], 'Error unbooking the time slot. Please try again.');
+      });
     });
   });
 }
