@@ -60,7 +60,9 @@ class TimeSlots extends StatelessWidget {
                                 selectedDateId: timeSlotsModel.state['selectedDateId'] as String,
                                 daySelected: (String dateId) => timeSlotsModel.selectDateId(dateId)),
                             TimeSlotsList(
-                              timeSlots: timeSlotsModel.state['timeSlots'],
+                              timeSlots: (timeSlotsModel.state['timeSlots'] as List<TimeSlot>)
+                                  .where((timeSlot) => timeSlot.locationId == timeSlotsModel.state['selectedLocation']?.id)
+                                  .toList(),
                               onCardTapped: _showCustomModalBottomSheet,
                             ),
                           ],

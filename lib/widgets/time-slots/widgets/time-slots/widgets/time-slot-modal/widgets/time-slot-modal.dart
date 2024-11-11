@@ -68,7 +68,6 @@ class TimeSlotModal extends StatelessWidget {
                                   booked: model.state['booked'],
                                   selectedTeacher: model.state['selectedTeacher'],
                                   selectedTeacherChanged: (teacher) {
-                                    print('selected triggered?');
                                     model.changeSelectedTeacher(teacher);
                                   }),
                               collapseMode: CollapseMode.parallax,

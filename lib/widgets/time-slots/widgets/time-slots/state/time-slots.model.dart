@@ -27,13 +27,11 @@ class TimeSlotsModel extends StateChangeNotifier<TimeSlotsState> {
   void selectDateId(String dateId) async {
     patchState({TimeSlotsStateKeys.selectedDateId.name: dateId});
 
-    _switchListenToOtherTimeSlotsCollection(dateId, state['selectedLocation']);
+    _switchListenToOtherTimeSlotsCollection(dateId);
   }
 
   void selectLocation(Location location) async {
     patchState({TimeSlotsStateKeys.selectedLocation.name: location});
-
-    _switchListenToOtherTimeSlotsCollection(state['selectedDateId'], location);
   }
 
   void _initialize() async {
@@ -48,13 +46,13 @@ class TimeSlotsModel extends StateChangeNotifier<TimeSlotsState> {
         TimeSlotsStateKeys.loading.name: false
       });
 
-      _switchListenToOtherTimeSlotsCollection(state['selectedDateId'], state['selectedLocation']);
+      _switchListenToOtherTimeSlotsCollection(state['selectedDateId']);
     });
   }
 
-  void _switchListenToOtherTimeSlotsCollection(String selectedDateId, Location selectedLocation) {
+  void _switchListenToOtherTimeSlotsCollection(String selectedDateId) {
     _cancelActiveTimeSlotsCollectionSubscription();
-    _listenToRespectiveTimeSlotsCollection(selectedDateId, selectedLocation);
+    _listenToRespectiveTimeSlotsCollection(selectedDateId);
   }
 
   void _cancelActiveTimeSlotsCollectionSubscription() async {
@@ -63,9 +61,9 @@ class TimeSlotsModel extends StateChangeNotifier<TimeSlotsState> {
     }
   }
 
-  void _listenToRespectiveTimeSlotsCollection(String selectedDateId, Location selectedLocation) async {
+  void _listenToRespectiveTimeSlotsCollection(String selectedDateId) async {
     _activeSubscription = dataProvider
-        .getTimeSlotsCollectionStream$(selectedDateId, selectedLocation, authenticationModel.getCurrentLoggedInUser()!.uid)
+        .getTimeSlotsCollectionStream$(selectedDateId, authenticationModel.getCurrentLoggedInUser()!.uid)
         .listen((timeSLots) {
       patchState({TimeSlotsStateKeys.timeSlots.name: timeSLots});
     });
