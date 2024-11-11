@@ -73,6 +73,7 @@ class TimeSlotsModel extends StateChangeNotifier<TimeSlotsState> {
 
   String _generateDateId() {
     final DateTime now = DateTime.now();
-    return '${DateFormat('EEE').format(now)}-${DateFormat('dd').format(now)}-${DateFormat('yyy').format(now)}';
+
+    return '${DateFormat('dd').format(now)}-${DateFormat('MM').format(now)}-${DateFormat('yyy').format(now)}';
   }
 }

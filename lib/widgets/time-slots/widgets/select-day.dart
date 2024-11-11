@@ -5,8 +5,7 @@ class TimeSelect extends StatelessWidget {
   final Function(String) daySelected;
   final String selectedDateId;
 
-  const TimeSelect(
-      {super.key, required this.daySelected, required this.selectedDateId});
+  const TimeSelect({super.key, required this.daySelected, required this.selectedDateId});
 
   @override
   Widget build(BuildContext context) {
@@ -43,17 +42,13 @@ class TimeSelect extends StatelessWidget {
                       child: Container(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: days[index].id == selectedDateId
-                              ? Colors.orange[700]
-                              : Colors.transparent,
+                          color: days[index].id == selectedDateId ? Colors.orange[700] : Colors.transparent,
                         ),
                         width: dayWidth,
                         child: Center(
                           child: Text(
                             days[index].dayNumber.toString(),
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),
@@ -87,23 +82,22 @@ class DayLabel {
   late int year;
   late String dayName;
   late int dayNumber;
+  late int monthNumber;
 
   DayLabel(DateTime dateTime) {
     dayName = DateFormat('EEE').format(dateTime);
     dayNumber = int.parse(DateFormat('dd').format(dateTime));
+    monthNumber = int.parse(DateFormat('MM').format(dateTime));
     year = int.parse(DateFormat('yyyy').format(dateTime));
-    id = '$dayName-$dayNumber-$year';
+    id = '$dayNumber-$monthNumber-$year';
   }
 
   bool isToday() {
     final DateTime currentDate = DateTime.now();
-    final String currentDayName = DateFormat('EEE').format(currentDate);
-    final int currentDayNumber =
-        int.parse(DateFormat('dd').format(currentDate));
+    final int currentMonthNumber = int.parse(DateFormat('MM').format(currentDate));
+    final int currentDayNumber = int.parse(DateFormat('dd').format(currentDate));
     final int year = int.parse(DateFormat('yyyy').format(currentDate));
 
-    return dayName == currentDayName &&
-        dayNumber == currentDayNumber &&
-        year == year;
+    return dayNumber == currentDayNumber && monthNumber == currentMonthNumber && year == year;
   }
 }

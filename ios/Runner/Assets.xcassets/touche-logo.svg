@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1E293B;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#172033;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0F172A;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="keysGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F8FAFC;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F7C56B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E6A545;stop-opacity:1" />
+    </linearGradient>
+    
+    <filter id="drop-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+      <feOffset dx="0" dy="2" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.12"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <filter id="text-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="0.5"/>
+      <feOffset dx="0" dy="0.5" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.15"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Base Background -->
+  <rect width="1024" height="1024" rx="224" fill="url(#bgGrad)"/>
+  
+  <!-- Refined Piano Keys -->
+  <path d="M362 402
+           C362 382, 378 362, 398 362
+           L626 362
+           C646 362, 662 382, 662 402
+           L662 662
+           C662 682, 646 702, 626 702
+           L398 702
+           C378 702, 362 682, 362 662
+           Z" 
+        fill="url(#keysGrad)"
+        filter="url(#drop-shadow)"/>
+  
+  <!-- Black Keys -->
+  <path d="M447 362
+           L487 362
+           L487 522
+           L447 522
+           Z" 
+        fill="#1A1A1A"/>
+        
+  <path d="M537 362
+           L577 362
+           L577 522
+           L537 522
+           Z" 
+        fill="#1A1A1A"/>
+  
+  <!-- Musical Note - Moved slightly higher -->
+  <g transform="translate(512, 452) scale(0.65)">
+    <path d="M-30 -120
+             C-30 -130, -20 -140, -10 -140
+             L30 -140
+             C40 -140, 50 -130, 50 -120
+             L50 80
+             C50 110, 20 130, -10 130
+             C-40 130, -70 110, -70 80
+             C-70 50, -40 30, -10 30
+             C-5 30, 0 31, 5 32
+             L5 -120
+             C5 -120, -30 -120, -30 -120
+             Z" 
+          fill="url(#goldGrad)"
+          filter="url(#drop-shadow)"/>
+  </g>
+
+  <!-- Elegant Typography - Now inside white area -->
+  <text x="512" y="612" 
+        text-anchor="middle" 
+        font-family="Didot, 'Didot LT STD', 'Hoefler Text', Garamond, 'Times New Roman', serif"
+        font-size="54"
+        font-weight="300"
+        letter-spacing="3"
+        fill="#1A1A1A"
+        filter="url(#text-shadow)"
+        style="text-transform: uppercase;">
+    TOUCHÉ
+  </text>
+</svg>

@@ -9,8 +9,10 @@ class TimeSlotsDataProvider {
   TimeSlotsDataProvider({required this.firebaseApp});
 
   Stream<List<TimeSlot>> getTimeSlotsCollectionStream$(String selectedDateId, Location selectedLocation, String loggedInUserID) {
+    print(selectedDateId);
+
     final CollectionReference<TimeSlot> timeSlotsRef = firebaseApp
-        .collection('dateIds/$selectedDateId/${selectedLocation.id}-slots')
+        .collection('dateIds/$selectedDateId/timeSlots')
         .withConverter<TimeSlot>(
             fromFirestore: (snapshot, _) => TimeSlot.fromJson(snapshot.data()!), toFirestore: (timeSlot, _) => timeSlot.toJson());
 
