@@ -306,5 +306,322 @@ void main() {
         });
       });
     });
+
+    group('Booking/Unbooking Flow', () {
+      test('successfully books a time slot', () async {
+        model = TimeSlotModalModel(
+          TimeSlotModalState(),
+          dataProvider: mockDataProvider,
+          timeSlot: timeSlot,
+          authenticationModel: mockAuthModel,
+        );
+        await Future.delayed(Duration.zero); // Wait for initialization
+
+        // Mock successful booking
+        when(mockDataProvider.bookTimeSlot(any, any, any)).thenAnswer((_) async => Future<void>.value());
+
+        await model.bookTimeSlot();
+
+        // Verify state changes
+        expect(model.state[TimeSlotModalStateKeys.booked.name], true);
+        expect(model.state[TimeSlotModalStateKeys.attendeeId.name], 'user123');
+
+        // Verify the correct booking call was made
+        verify(mockDataProvider.bookTimeSlot(
+          timeSlot,
+          'user123',
+          (model.state[TimeSlotModalStateKeys.selectedTeacher.name] as Teacher).id,
+        )).called(1);
+      });
+
+      test('handles booking error correctly', () async {
+        model = TimeSlotModalModel(
+          TimeSlotModalState(),
+          dataProvider: mockDataProvider,
+          timeSlot: timeSlot,
+          authenticationModel: mockAuthModel,
+        );
+        await Future.delayed(Duration.zero);
+
+        // Mock booking failure
+        when(mockDataProvider.bookTimeSlot(any, any, any)).thenThrow(Exception('Booking failed'));
+
+        await model.bookTimeSlot();
+
+        // Verify error state
+        expect(model.state[TimeSlotModalStateKeys.booked.name], false);
+        expect(
+          model.state[TimeSlotModalStateKeys.snackbarText.name],
+          'Error booking the time slot. Please try again.',
+        );
+      });
+
+      test('successfully unbooks a time slot', () async {
+        // Start with a booked time slot
+        final bookedTimeSlot = TimeSlot(
+          id: 'timeslot1',
+          dateId: 'date1',
+          locationId: 'location1',
+          teachersIds: ['teacher1', 'teacher2'],
+          selectedTeacherId: 'teacher1',
+          attendeeId: 'user123',
+          booked: true,
+          duration: 60,
+          startTime: const Tuple2<int, int>(1, 2),
+        );
+
+        model = TimeSlotModalModel(
+          TimeSlotModalState(),
+          dataProvider: mockDataProvider,
+          timeSlot: bookedTimeSlot,
+          authenticationModel: mockAuthModel,
+        );
+        await Future.delayed(Duration.zero);
+
+        // Mock successful unbooking
+        when(mockDataProvider.unBookTimeSlot(any)).thenAnswer((_) async => Future<void>.value());
+
+        await model.unBookTimeSlot();
+
+        // Verify state changes
+        expect(model.state[TimeSlotModalStateKeys.booked.name], false);
+        expect(model.state[TimeSlotModalStateKeys.attendeeId.name], '');
+
+        // Verify the correct unbooking call was made
+        verify(mockDataProvider.unBookTimeSlot(bookedTimeSlot)).called(1);
+      });
+
+      test('handles unbooking error correctly', () async {
+        // Start with a booked time slot
+        final bookedTimeSlot = TimeSlot(
+          id: 'timeslot1',
+          dateId: 'date1',
+          locationId: 'location1',
+          teachersIds: ['teacher1', 'teacher2'],
+          selectedTeacherId: 'teacher1',
+          attendeeId: 'user123',
+          booked: true,
+          duration: 60,
+          startTime: const Tuple2<int, int>(1, 2),
+        );
+
+        model = TimeSlotModalModel(
+          TimeSlotModalState(),
+          dataProvider: mockDataProvider,
+          timeSlot: bookedTimeSlot,
+          authenticationModel: mockAuthModel,
+        );
+        await Future.delayed(Duration.zero);
+
+        // Mock unbooking failure
+        when(mockDataProvider.unBookTimeSlot(any)).thenThrow(Exception('Unbooking failed'));
+
+        await model.unBookTimeSlot();
+
+        // Verify error state
+        expect(model.state[TimeSlotModalStateKeys.booked.name], true);
+        expect(
+          model.state[TimeSlotModalStateKeys.snackbarText.name],
+          'Error unbooking the time slot. Please try again.',
+        );
+      });
+    });
+
+    group('Teacher Selection', () {
+      test('successfully changes selected teacher', () async {
+        model = TimeSlotModalModel(
+          TimeSlotModalState(),
+          dataProvider: mockDataProvider,
+          timeSlot: timeSlot,
+          authenticationModel: mockAuthModel,
+        );
+        await Future.delayed(Duration.zero); // Wait for initialization
+
+        // Grab the second teacher to switch to
+        final newSelectedTeacher = teachers[1]; // teacher2
+
+        model.changeSelectedTeacher(newSelectedTeacher);
+
+        // Verify selected teacher was updated
+        final stateSelectedTeacher = model.state[TimeSlotModalStateKeys.selectedTeacher.name] as Teacher;
+        expect(stateSelectedTeacher.id, newSelectedTeacher.id);
+        expect(stateSelectedTeacher.displayName, newSelectedTeacher.displayName);
+      });
+
+      test('changing selected teacher maintains other state', () async {
+        // Initialize with a booked time slot
+        final bookedTimeSlot = TimeSlot(
+          id: 'timeslot1',
+          dateId: 'date1',
+          locationId: 'location1',
+          teachersIds: ['teacher1', 'teacher2'],
+          selectedTeacherId: 'teacher1',
+          attendeeId: 'user123',
+          booked: true,
+          duration: 60,
+          startTime: const Tuple2<int, int>(1, 2),
+        );
+
+        model = TimeSlotModalModel(
+          TimeSlotModalState(),
+          dataProvider: mockDataProvider,
+          timeSlot: bookedTimeSlot,
+          authenticationModel: mockAuthModel,
+        );
+        await Future.delayed(Duration.zero);
+
+        // Store initial state values we want to verify don't change
+        final initialBooked = model.state[TimeSlotModalStateKeys.booked.name];
+        final initialAttendeeId = model.state[TimeSlotModalStateKeys.attendeeId.name];
+        final initialDuration = model.state[TimeSlotModalStateKeys.duration.name];
+
+        // Change selected teacher
+        final newSelectedTeacher = teachers[1];
+        model.changeSelectedTeacher(newSelectedTeacher);
+
+        // Verify other state remained unchanged
+        expect(model.state[TimeSlotModalStateKeys.booked.name], initialBooked);
+        expect(model.state[TimeSlotModalStateKeys.attendeeId.name], initialAttendeeId);
+        expect(model.state[TimeSlotModalStateKeys.duration.name], initialDuration);
+      });
+    });
+
+    group('Snackbar Handling', () {
+      test('closeSnackbar clears snackbar text', () async {
+        model = TimeSlotModalModel(
+          TimeSlotModalState(),
+          dataProvider: mockDataProvider,
+          timeSlot: timeSlot,
+          authenticationModel: mockAuthModel,
+        );
+        await Future.delayed(Duration.zero);
+
+        // First set some error to show snackbar
+        when(mockDataProvider.bookTimeSlot(any, any, any)).thenThrow(Exception('Booking failed'));
+
+        await model.bookTimeSlot();
+        expect(model.state[TimeSlotModalStateKeys.snackbarText.name], 'Error booking the time slot. Please try again.');
+
+        // Now clear the snackbar
+        model.closeSnackbar();
+        expect(model.state[TimeSlotModalStateKeys.snackbarText.name], '');
+      });
+    });
+
+    group('Cleanup/Disposal', () {
+      test('dispose cancels stream subscription and effects', () async {
+        model = TimeSlotModalModel(
+          TimeSlotModalState(),
+          dataProvider: mockDataProvider,
+          timeSlot: timeSlot,
+          authenticationModel: mockAuthModel,
+        );
+        await Future.delayed(Duration.zero);
+
+        // Store initial state
+        final initialTeachers = model.state[TimeSlotModalStateKeys.teachers.name] as List<Teacher>;
+
+        // Dispose the model
+        model.dispose();
+
+        // Try to emit new data after disposal
+        final updatedTimeSlot = TimeSlot(
+          id: 'timeslot1',
+          dateId: 'date1',
+          locationId: 'location1',
+          teachersIds: ['teacher3'],
+          selectedTeacherId: 'teacher3',
+          attendeeId: null,
+          booked: false,
+          duration: 60,
+          startTime: const Tuple2<int, int>(1, 2),
+        );
+
+        timeSlotController.add(updatedTimeSlot);
+        await Future.delayed(Duration.zero);
+
+        // Verify state hasn't changed after disposal
+        expect(model.state[TimeSlotModalStateKeys.teachers.name], initialTeachers);
+      });
+    });
+
+    group('Edge Cases', () {
+      test('handles null attendeeId correctly', () async {
+        final nullAttendeeSlot = TimeSlot(
+          id: 'timeslot1',
+          dateId: 'date1',
+          locationId: 'location1',
+          teachersIds: ['teacher1', 'teacher2'],
+          selectedTeacherId: 'teacher1',
+          attendeeId: null,
+          booked: false,
+          duration: 60,
+          startTime: const Tuple2<int, int>(1, 2),
+        );
+
+        model = TimeSlotModalModel(
+          TimeSlotModalState(),
+          dataProvider: mockDataProvider,
+          timeSlot: nullAttendeeSlot,
+          authenticationModel: mockAuthModel,
+        );
+        await Future.delayed(Duration.zero);
+
+        expect(model.state[TimeSlotModalStateKeys.attendeeId.name], '');
+        expect(model.state[TimeSlotModalStateKeys.booked.name], false);
+        expect(model.state[TimeSlotModalStateKeys.bookButtonDisabled.name], false);
+      });
+
+      test('handles empty teachers list', () async {
+        final emptyTeachersSlot = TimeSlot(
+          id: 'timeslot1',
+          dateId: 'date1',
+          locationId: 'location1',
+          teachersIds: [], // Empty list
+          selectedTeacherId: '',
+          attendeeId: null,
+          booked: false,
+          duration: 60,
+          startTime: const Tuple2<int, int>(1, 2),
+        );
+
+        when(mockDataProvider.getTeachersByIds([])).thenAnswer((_) async => []);
+
+        model = TimeSlotModalModel(
+          TimeSlotModalState(),
+          dataProvider: mockDataProvider,
+          timeSlot: emptyTeachersSlot,
+          authenticationModel: mockAuthModel,
+        );
+        await Future.delayed(Duration.zero);
+
+        expect(model.state[TimeSlotModalStateKeys.teachers.name], isEmpty);
+      });
+
+      test('falls back to first teacher when selected teacher is not in list', () async {
+        final invalidSelectedTeacherSlot = TimeSlot(
+          id: 'timeslot1',
+          dateId: 'date1',
+          locationId: 'location1',
+          teachersIds: ['teacher1', 'teacher2'],
+          selectedTeacherId: 'non_existent_teacher',
+          attendeeId: null,
+          booked: false,
+          duration: 60,
+          startTime: const Tuple2<int, int>(1, 2),
+        );
+
+        model = TimeSlotModalModel(
+          TimeSlotModalState(),
+          dataProvider: mockDataProvider,
+          timeSlot: invalidSelectedTeacherSlot,
+          authenticationModel: mockAuthModel,
+        );
+        await Future.delayed(Duration.zero);
+
+        final selectedTeacher = model.state[TimeSlotModalStateKeys.selectedTeacher.name] as Teacher;
+        expect(selectedTeacher.id, 'teacher1'); // Falls back to first teacher
+      });
+    });
   });
 }
