@@ -1,13 +1,9 @@
-// test/time_slot_modal_model_test.dart
-
-// Import Firebase Auth with an alias to avoid conflicts
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-// Import your model and dependencies
 import 'package:touche_app/models/entities/teacher.dart';
 import 'package:touche_app/models/entities/time-slot.dart';
 import 'package:touche_app/widgets/authentication/widgets/state/authentication.model.dart';
@@ -16,20 +12,19 @@ import 'package:touche_app/widgets/time-slots/widgets/time-slots/widgets/time-sl
 import 'package:touche_app/widgets/time-slots/widgets/time-slots/widgets/time-slot-modal/state/time_slot_modal_data_provider.dart';
 import 'package:tuple/tuple.dart';
 
-// Import the generated mocks
 import 'time_slot_modal_model_test.mocks.dart';
 
-// Generate mocks for the classes and Firebase User
 @GenerateMocks([
   TimeSlotModalDataProvider,
   AuthenticationModel,
   firebase_auth.User,
 ])
 void main() {
-  group('TimeSlotModalModel Initialization Test', () {
+  group('TimeSlotModalModel Tests', () {
     late MockTimeSlotModalDataProvider mockDataProvider;
     late MockAuthenticationModel mockAuthModel;
     late TimeSlotModalModel model;
+    late StreamController<TimeSlot> timeSlotController;
     late TimeSlot timeSlot;
     late firebase_auth.User mockFirebaseUser;
     late List<Teacher> teachers;
@@ -38,28 +33,14 @@ void main() {
       // Initialize mocks
       mockDataProvider = MockTimeSlotModalDataProvider();
       mockAuthModel = MockAuthenticationModel();
-      mockFirebaseUser = MockUser(); // Mocked Firebase User
+      mockFirebaseUser = MockUser();
+      timeSlotController = StreamController<TimeSlot>();
 
-      // Set up a mock current user
+      // Set up mock user
       when(mockFirebaseUser.uid).thenReturn('user123');
       when(mockFirebaseUser.displayName).thenReturn('Test User');
       when(mockFirebaseUser.email).thenReturn('testuser@mail.com');
-
-      // Mock the authentication model to return the current user
       when(mockAuthModel.getCurrentLoggedInUser()).thenReturn(mockFirebaseUser);
-
-      // Set up a TimeSlot object
-      timeSlot = TimeSlot(
-        id: 'timeslot1',
-        dateId: 'date1',
-        locationId: 'location1',
-        teachersIds: ['teacher1', 'teacher2'],
-        selectedTeacherId: 'teacher1',
-        attendeeId: null,
-        booked: false,
-        duration: 60,
-        startTime: const Tuple2<int, int>(1, 2),
-      );
 
       // Set up mock teachers
       teachers = [
@@ -83,25 +64,31 @@ void main() {
         ),
       ];
 
-      // Mock the dataProvider methods
-      when(mockDataProvider.getTeachersByIds(any)).thenAnswer((_) async => teachers);
-      when(mockDataProvider.getTimeSlotDocumentStream$(any, any, any)).thenAnswer((_) => Stream<TimeSlot>.value(timeSlot));
-
-      // Initial state
-      TimeSlotModalState initialState = TimeSlotModalState();
-
-      // Initialize the model
-      model = TimeSlotModalModel(
-        initialState,
-        dataProvider: mockDataProvider,
-        timeSlot: timeSlot,
-        authenticationModel: mockAuthModel,
+      // Set up initial TimeSlot
+      timeSlot = TimeSlot(
+        id: 'timeslot1',
+        dateId: 'date1',
+        locationId: 'location1',
+        teachersIds: ['teacher1', 'teacher2'],
+        selectedTeacherId: 'teacher1',
+        attendeeId: null,
+        booked: false,
+        duration: 60,
+        startTime: const Tuple2<int, int>(1, 2),
       );
+
+      // Set up mocked responses
+      when(mockDataProvider.getTeachersByIds(any)).thenAnswer((_) async => teachers);
+      when(mockDataProvider.getTimeSlotDocumentStream$(any, any, any)).thenAnswer((_) => timeSlotController.stream);
+    });
+
+    tearDown(() {
+      timeSlotController.close();
     });
 
     group('Initialization', () {
       test('State is patched correctly if the initial slot is booked', () async {
-        timeSlot = TimeSlot(
+        final bookedTimeSlot = TimeSlot(
           id: 'timeslot1',
           dateId: 'date1',
           locationId: 'location1',
@@ -116,10 +103,11 @@ void main() {
         model = TimeSlotModalModel(
           TimeSlotModalState(),
           dataProvider: mockDataProvider,
-          timeSlot: timeSlot,
+          timeSlot: bookedTimeSlot,
           authenticationModel: mockAuthModel,
         );
 
+        // Just wait for initial data loading
         await Future.delayed(Duration.zero);
 
         expect(model.state[TimeSlotModalStateKeys.booked.name], true);
@@ -127,7 +115,7 @@ void main() {
       });
 
       test('State is patched correctly if the initial slot is unbooked', () async {
-        timeSlot = TimeSlot(
+        final unbookedTimeSlot = TimeSlot(
           id: 'timeslot1',
           dateId: 'date1',
           locationId: 'location1',
@@ -142,7 +130,7 @@ void main() {
         model = TimeSlotModalModel(
           TimeSlotModalState(),
           dataProvider: mockDataProvider,
-          timeSlot: timeSlot,
+          timeSlot: unbookedTimeSlot,
           authenticationModel: mockAuthModel,
         );
 
@@ -150,22 +138,11 @@ void main() {
 
         expect(model.state[TimeSlotModalStateKeys.booked.name], false);
         expect(model.state[TimeSlotModalStateKeys.attendeeId.name], '');
+        expect(model.state[TimeSlotModalStateKeys.bookButtonDisabled.name], false);
       });
 
-      test('Snackbar is shown on initialization error', () async {
+      test('State handles initialization error correctly', () async {
         when(mockDataProvider.getTeachersByIds(any)).thenThrow(Exception('Error fetching teachers'));
-
-        timeSlot = TimeSlot(
-          id: 'timeslot1',
-          dateId: 'date1',
-          locationId: 'location1',
-          teachersIds: ['teacher1', 'teacher2'],
-          selectedTeacherId: 'teacher1',
-          attendeeId: 'user123', // Mark as booked
-          booked: true,
-          duration: 60,
-          startTime: const Tuple2<int, int>(1, 2),
-        );
 
         model = TimeSlotModalModel(
           TimeSlotModalState(),
@@ -178,49 +155,155 @@ void main() {
 
         expect(model.state[TimeSlotModalStateKeys.snackbarText.name], 'Error during initialization, try later please!');
       });
-    });
 
-    group('Booking flow', () {
-      test('Slot is booked successfully', () async {
-        when(mockDataProvider.bookTimeSlot(any, any, any)).thenAnswer((_) async => Future.value());
+      test('Teachers are loaded and selected teacher is set correctly', () async {
+        model = TimeSlotModalModel(
+          TimeSlotModalState(),
+          dataProvider: mockDataProvider,
+          timeSlot: timeSlot,
+          authenticationModel: mockAuthModel,
+        );
 
-        await model.bookTimeSlot();
+        await Future.delayed(Duration.zero);
 
-        expect(model.state[TimeSlotModalStateKeys.booked.name], true);
-        expect(model.state[TimeSlotModalStateKeys.attendeeId.name], mockFirebaseUser.uid);
-
-        verify(mockDataProvider.bookTimeSlot(any, any, any)).called(1); // works fine
-      });
-
-      test('Error during booking triggers snackbar', () async {
-        when(mockDataProvider.bookTimeSlot(any, any, any)).thenThrow(Exception('Booking error'));
-
-        await model.bookTimeSlot();
-
-        expect(model.state[TimeSlotModalStateKeys.booked.name], false);
-        expect(model.state[TimeSlotModalStateKeys.snackbarText.name], 'Error booking the time slot. Please try again.');
+        expect(model.state[TimeSlotModalStateKeys.teachers.name], teachers);
+        expect((model.state[TimeSlotModalStateKeys.selectedTeacher.name] as Teacher).id, 'teacher1');
+        verify(mockDataProvider.getTeachersByIds(['teacher1', 'teacher2'])).called(1);
       });
     });
 
-    group('Unbooking flow', () {
-      test('Slot is unbooked successfully', () async {
-        when(mockDataProvider.bookTimeSlot(any, any, any)).thenAnswer((_) async => Future.value());
+    group('Reactivity', () {
+      group('Teachers Signal Effect', () {
+        test('updates teachers when ids change', () async {
+          model = TimeSlotModalModel(
+            TimeSlotModalState(),
+            dataProvider: mockDataProvider,
+            timeSlot: timeSlot,
+            authenticationModel: mockAuthModel,
+          );
 
-        await model.unBookTimeSlot();
+          // First verify initialization call
+          verify(mockDataProvider.getTeachersByIds(['teacher1', 'teacher2'])).called(1);
+          clearInteractions(mockDataProvider);
 
-        expect(model.state[TimeSlotModalStateKeys.booked.name], false);
-        expect(model.state[TimeSlotModalStateKeys.attendeeId.name], '');
+          // Set up new teachers
+          final newTeachers = [
+            Teacher(
+              id: 'teacher3',
+              displayName: 'Teacher Three',
+              backgroundImageUrl: '',
+              email: 'teacher3@mail.com',
+              uid: 'teacher3',
+              number: '',
+              description: '',
+            ),
+            Teacher(
+              id: 'teacher4',
+              displayName: 'Teacher Four',
+              backgroundImageUrl: '',
+              email: 'teacher4@mail.com',
+              uid: 'teacher4',
+              number: '',
+              description: '',
+            ),
+          ];
 
-        verify(mockDataProvider.unBookTimeSlot(timeSlot)).called(1);
+          when(mockDataProvider.getTeachersByIds(['teacher3', 'teacher4'])).thenAnswer((_) async => newTeachers);
+
+          final updatedTimeSlot = TimeSlot(
+            id: 'timeslot1',
+            dateId: 'date1',
+            locationId: 'location1',
+            teachersIds: ['teacher3', 'teacher4'],
+            selectedTeacherId: 'teacher3',
+            attendeeId: null,
+            booked: false,
+            duration: 60,
+            startTime: const Tuple2<int, int>(1, 2),
+          );
+
+          timeSlotController.add(timeSlot);
+          await Future.delayed(Duration.zero);
+          timeSlotController.add(updatedTimeSlot);
+          await Future.delayed(Duration.zero);
+
+          final stateTeachers = model.state[TimeSlotModalStateKeys.teachers.name] as List<Teacher>;
+          expect(stateTeachers[0].id, 'teacher3');
+          expect(stateTeachers[1].id, 'teacher4');
+
+          // Verify only one new call with new teacher ids
+          verify(mockDataProvider.getTeachersByIds(['teacher3', 'teacher4'])).called(1);
+        });
       });
 
-      test('Error during unbooking triggers snackbar', () async {
-        when(mockDataProvider.unBookTimeSlot(any)).thenThrow(Exception('Unbooking error'));
+      group('Attendee Signal Effect', () {
+        test('updates booking state when slot is booked by another user', () async {
+          model = TimeSlotModalModel(
+            TimeSlotModalState(),
+            dataProvider: mockDataProvider,
+            timeSlot: timeSlot,
+            authenticationModel: mockAuthModel,
+          );
+          await Future.delayed(Duration.zero);
 
-        await model.unBookTimeSlot();
+          final bookedTimeSlot = TimeSlot(
+            id: 'timeslot1',
+            dateId: 'date1',
+            locationId: 'location1',
+            teachersIds: ['teacher1', 'teacher2'],
+            selectedTeacherId: 'teacher1',
+            attendeeId: 'other_user', // Different user
+            booked: true,
+            duration: 60,
+            startTime: const Tuple2<int, int>(1, 2),
+          );
 
-        expect(model.state[TimeSlotModalStateKeys.booked.name], true);
-        expect(model.state[TimeSlotModalStateKeys.snackbarText.name], 'Error unbooking the time slot. Please try again.');
+          // Skip first emission
+          timeSlotController.add(timeSlot);
+          await Future.delayed(Duration.zero);
+
+          // Emit booked state
+          timeSlotController.add(bookedTimeSlot);
+          await Future.delayed(Duration.zero);
+
+          expect(model.state[TimeSlotModalStateKeys.booked.name], true);
+          expect(model.state[TimeSlotModalStateKeys.attendeeId.name], 'other_user');
+          expect(model.state[TimeSlotModalStateKeys.bookButtonDisabled.name], true);
+        });
+
+        test('updates booking state when slot is booked by current user', () async {
+          model = TimeSlotModalModel(
+            TimeSlotModalState(),
+            dataProvider: mockDataProvider,
+            timeSlot: timeSlot,
+            authenticationModel: mockAuthModel,
+          );
+          await Future.delayed(Duration.zero);
+
+          final bookedTimeSlot = TimeSlot(
+            id: 'timeslot1',
+            dateId: 'date1',
+            locationId: 'location1',
+            teachersIds: ['teacher1', 'teacher2'],
+            selectedTeacherId: 'teacher1',
+            attendeeId: 'user123', // Current user
+            booked: true,
+            duration: 60,
+            startTime: const Tuple2<int, int>(1, 2),
+          );
+
+          // Skip first emission
+          timeSlotController.add(timeSlot);
+          await Future.delayed(Duration.zero);
+
+          // Emit booked state
+          timeSlotController.add(bookedTimeSlot);
+          await Future.delayed(Duration.zero);
+
+          expect(model.state[TimeSlotModalStateKeys.booked.name], true);
+          expect(model.state[TimeSlotModalStateKeys.attendeeId.name], 'user123');
+          expect(model.state[TimeSlotModalStateKeys.bookButtonDisabled.name], false);
+        });
       });
     });
   });

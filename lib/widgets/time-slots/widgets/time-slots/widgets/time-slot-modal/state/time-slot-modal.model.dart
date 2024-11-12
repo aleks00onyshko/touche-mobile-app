@@ -74,11 +74,18 @@ class TimeSlotModalModel extends StateChangeNotifier {
     _listenToTimeSlotDocChanges(timeSlot);
 
     _teachersIdsEffectDisposeFn = effect(() {
-      if (_teachersIdsSignal.value.isNotEmpty && _teachersIdsSignal.previousValue?.length != _teachersIdsSignal.value.length) {
-        _loadAndReplaceTeachers(_teachersIdsSignal.value);
+      if (_teachersIdsSignal.value.isNotEmpty) {
+        final previousIds = _teachersIdsSignal.previousValue ?? [];
+        final currentIds = _teachersIdsSignal.value;
+
+        // Check if arrays have different elements, regardless of length
+        final hasChanges = previousIds.length != currentIds.length || !previousIds.every((id) => currentIds.contains(id));
+
+        if (hasChanges) {
+          _loadAndReplaceTeachers(_teachersIdsSignal.value);
+        }
       }
     });
-
     _atendeeIdEffectDisposeFn = effect(() {
       if (_atendeeIdSignal.value != null) {
         patchState({

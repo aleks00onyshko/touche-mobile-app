@@ -32,14 +32,13 @@ class TimeSlotModal extends StatelessWidget {
                   .showSnackBar(
                     SnackBar(
                       content: Text(model.state['snackbarText']!),
-                      duration: const Duration(seconds: 2), // SnackBar will be shown for 2 seconds
+                      duration: const Duration(seconds: 2),
                       behavior: SnackBarBehavior.floating,
                     ),
                   )
                   .closed
                   .then((reason) {
-                // Clear the message after the SnackBar is dismissed
-                model.closeSnackbar(); // Call your method to clear the message
+                model.closeSnackbar();
               });
             }
           });
